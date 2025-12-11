@@ -8,14 +8,7 @@
     "username": "sa",
     "password": "MiPassw0rd!1521"
   },
-  "alert_recipients": {
-    "emails": [
-      "admin@example.com",
-      "finance@example.com"
-    ],
-    "teams_webhook": "",
-    "slack_webhook": ""
-  },
+  "recipients_file": "recipients.json",
   "isolation_forest": {
     "contamination": 0.02,
     "random_state": 42,

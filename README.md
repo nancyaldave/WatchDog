@@ -31,9 +31,11 @@ pip install -r requirements.txt
    ```
    Luego edita `config.json` con tus credenciales
 
-4. **Configurar destinatarios de alertas en `config.json`**
+4. **Configurar destinatarios de alertas en `recipients.json`**
 
 ## 📝 Configuración
+
+### 1. Configuración principal (`config.json`)
 
 Edita el archivo `config.json`:
 
@@ -70,6 +72,7 @@ Edita el archivo `config.json`:
     "teams_webhook": "https://outlook.office.com/webhook/...",
     "slack_webhook": "https://hooks.slack.com/services/..."
   },
+  "recipients_file": "recipients.json",
   "isolation_forest": {
     "contamination": 0.02,
     "random_state": 42,
@@ -83,6 +86,89 @@ Edita el archivo `config.json`:
 }
 ```
 
+### 2. Destinatarios de alertas (`recipients.json`)
+
+Edita el archivo `recipients.json` para agregar o modificar destinatarios:
+
+```json
+{
+  "people": [
+    {
+      "name": "Administrador del Sistema",
+      "email": "admin@example.com",
+      "role": "Administrator",
+      "enabled": true
+    },
+    {
+      "name": "Gerente de Finanzas",
+      "email": "finance@example.com",
+      "role": "Finance Manager",
+      "enabled": true
+    },
+    {
+      "name": "Contador Principal",
+      "email": "accountant@example.com",
+      "role": "Senior Accountant",
+      "enabled": false
+    }
+  ],
+  "channels": {
+    "teams_webhook": "https://outlook.office.com/webhook/...",
+    "slack_webhook": "https://hooks.slack.com/services/..."
+  },
+  "email_settings": {
+    "from_email": "anomaly-detector@accounttech.com",
+    "from_name": "Sistema de Detección de Anomalías",
+    "smtp_server": "localhost",
+    "smtp_port": 25,
+    "use_tls": false,
+    "use_authentication": false,
+    "smtp_username": "",
+    "smtp_password": ""
+  }
+}
+```
+
+**Campos de cada persona:**
+- `name`: Nombre completo de la persona
+- `email`: Dirección de email para recibir alertas
+- `role`: Rol o cargo (opcional, para referencia)
+- `enabled`: `true` para recibir alertas, `false` para deshabilitar temporalmente
+
+**Canales:**
+- `teams_webhook`: URL del webhook de Microsoft Teams (opcional)
+- `slack_webhook`: URL del webhook de Slack (opcional)
+
+**Configuración de email:**
+- `from_email`: Email del remitente
+- `from_name`: Nombre del remitente
+- `smtp_server`: Servidor SMTP (ej: `smtp.gmail.com`, `smtp-mail.outlook.com`, `localhost`)
+- `smtp_port`: Puerto SMTP (25 para servidor local, 587 para TLS, 465 para SSL)
+- `use_tls`: `true` para habilitar TLS/STARTTLS (requerido para Gmail, Outlook)
+- `use_authentication`: `true` para usar autenticación SMTP
+- `smtp_username`: Usuario SMTP (si `use_authentication` es `true`)
+- `smtp_password`: Contraseña SMTP (si `use_authentication` es `true`)
+
+**Ejemplos de configuración SMTP:**
+
+Para Gmail:
+```json
+"smtp_server": "smtp.gmail.com",
+"smtp_port": 587,
+"use_tls": true,
+"use_authentication": true,
+"smtp_username": "tu-email@gmail.com",
+"smtp_password": "tu-contraseña-de-aplicacion"
+```
+
+Para servidor local (sin autenticación):
+```json
+"smtp_server": "localhost",
+"smtp_port": 25,
+"use_tls": false,
+"use_authentication": false
+```
+
 ### Parámetros importantes:
 
 - **database**: Configuración de conexión SQL Server
@@ -93,6 +179,7 @@ Edita el archivo `config.json`:
   - **trusted_connection**: `true` para autenticación Windows, `false` para usuario/contraseña
   - **username** y **password**: Solo necesarios si `trusted_connection` es `false`
 - **alert_recipients**: Lista de emails y webhooks para alertas
+- **recipients_file**: Ruta al archivo JSON con destinatarios (por defecto: `recipients.json`)
 - **isolation_forest.contamination**: Porcentaje esperado de anomalías (0.02 = 2%)
 - **llm**: Configuración del LLM local (Ollama)
 
@@ -197,6 +284,8 @@ Py WhatDog/
 ├── alert_system.py         # Sistema de envío de alertas
 ├── llm_generator.py        # Generador de mensajes con LLM
 ├── config.json             # Configuración del sistema
+├── recipients.json         # Lista de destinatarios de alertas
+├── create_view.sql         # Script SQL para crear la vista
 ├── requirements.txt        # Dependencias Python
 └── README.md              # Este archivo
 ```
@@ -224,14 +313,15 @@ Si no quieres usar LLM, configura `"enabled": false` en `config.json` bajo `llm`
 
 ## 📧 Configuración de Email
 
-Para enviar emails, configura tu servidor SMTP en `alert_system.py`:
+Para enviar emails, configura tu servidor SMTP en `recipients.json` bajo la sección `email_settings`. 
 
-```python
-smtp_server = "smtp.gmail.com"  # o tu servidor SMTP
-smtp_port = 587
-```
+El sistema ahora envía emails realmente (el código SMTP está implementado y funcional). Configura los siguientes parámetros según tu servidor:
 
-Si usas Gmail, necesitarás una contraseña de aplicación. Para servidor local, usa `localhost:25`.
+- **Servidor local**: Usa `localhost` con puerto `25`, sin TLS ni autenticación
+- **Gmail**: Requiere TLS y autenticación con contraseña de aplicación
+- **Outlook/Office365**: Requiere TLS y autenticación
+
+Ver la sección de configuración de `recipients.json` arriba para ejemplos completos.
 
 ## 🐛 Solución de Problemas
 
