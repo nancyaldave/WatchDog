@@ -28,9 +28,11 @@ pip install -r requirements.txt
 
 3. **Configurar la conexión a la base de datos en `config.json`**
 
-4. **Configurar destinatarios de alertas en `config.json`**
+4. **Configurar destinatarios de alertas en `recipients.json`**
 
 ## 📝 Configuración
+
+### 1. Configuración principal (`config.json`)
 
 Edita el archivo `config.json`:
 
@@ -42,14 +44,7 @@ Edita el archivo `config.json`:
     "driver": "ODBC Driver 17 for SQL Server",
     "trusted_connection": true
   },
-  "alert_recipients": {
-    "emails": [
-      "admin@example.com",
-      "finance@example.com"
-    ],
-    "teams_webhook": "https://outlook.office.com/webhook/...",
-    "slack_webhook": "https://hooks.slack.com/services/..."
-  },
+  "recipients_file": "recipients.json",
   "isolation_forest": {
     "contamination": 0.02,
     "random_state": 42,
@@ -66,10 +61,61 @@ Edita el archivo `config.json`:
 }
 ```
 
+### 2. Destinatarios de alertas (`recipients.json`)
+
+Edita el archivo `recipients.json` para agregar o modificar destinatarios:
+
+```json
+{
+  "people": [
+    {
+      "name": "Administrador del Sistema",
+      "email": "admin@example.com",
+      "role": "Administrator",
+      "enabled": true
+    },
+    {
+      "name": "Gerente de Finanzas",
+      "email": "finance@example.com",
+      "role": "Finance Manager",
+      "enabled": true
+    },
+    {
+      "name": "Contador Principal",
+      "email": "accountant@example.com",
+      "role": "Senior Accountant",
+      "enabled": false
+    }
+  ],
+  "channels": {
+    "teams_webhook": "https://outlook.office.com/webhook/...",
+    "slack_webhook": "https://hooks.slack.com/services/..."
+  },
+  "email_settings": {
+    "from_email": "anomaly-detector@accounttech.com",
+    "from_name": "Sistema de Detección de Anomalías"
+  }
+}
+```
+
+**Campos de cada persona:**
+- `name`: Nombre completo de la persona
+- `email`: Dirección de email para recibir alertas
+- `role`: Rol o cargo (opcional, para referencia)
+- `enabled`: `true` para recibir alertas, `false` para deshabilitar temporalmente
+
+**Canales:**
+- `teams_webhook`: URL del webhook de Microsoft Teams (opcional)
+- `slack_webhook`: URL del webhook de Slack (opcional)
+
+**Configuración de email:**
+- `from_email`: Email del remitente
+- `from_name`: Nombre del remitente
+
 ### Parámetros importantes:
 
 - **database**: Configuración de conexión SQL Server
-- **alert_recipients**: Lista de emails y webhooks para alertas
+- **recipients_file**: Ruta al archivo JSON con destinatarios (por defecto: `recipients.json`)
 - **isolation_forest.contamination**: Porcentaje esperado de anomalías (0.02 = 2%)
 - **alert_threshold.ratio_multiplier**: Multiplicador para regla de negocio (3.0 = 3x)
 - **llm**: Configuración del LLM local (Ollama)
@@ -147,6 +193,8 @@ Py WhatDog/
 ├── alert_system.py         # Sistema de envío de alertas
 ├── llm_generator.py        # Generador de mensajes con LLM
 ├── config.json             # Configuración del sistema
+├── recipients.json         # Lista de destinatarios de alertas
+├── create_view.sql         # Script SQL para crear la vista
 ├── requirements.txt        # Dependencias Python
 └── README.md              # Este archivo
 ```

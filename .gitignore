@@ -44,4 +44,5 @@ Thumbs.db
 
 # Configuración sensible (opcional, comentar si quieres versionar)
 # config.json
+# recipients.json
 

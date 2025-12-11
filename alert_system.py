@@ -7,22 +7,61 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
-from typing import Dict, Any
+from typing import Dict, Any, List
+import os
 
 
 class AlertSystem:
     """Maneja el envío de alertas a diferentes canales."""
     
-    def __init__(self, recipients_config: Dict[str, Any]):
+    def __init__(self, recipients_file: str = 'recipients.json'):
         """
         Inicializa el sistema de alertas.
         
         Args:
-            recipients_config: Configuración de destinatarios desde config.json
+            recipients_file: Ruta al archivo JSON con destinatarios
         """
-        self.emails = recipients_config.get('emails', [])
-        self.teams_webhook = recipients_config.get('teams_webhook', '')
-        self.slack_webhook = recipients_config.get('slack_webhook', '')
+        self.recipients_file = recipients_file
+        self.recipients_data = self._load_recipients()
+        self.emails = self._get_enabled_emails()
+        self.teams_webhook = self.recipients_data.get('channels', {}).get('teams_webhook', '')
+        self.slack_webhook = self.recipients_data.get('channels', {}).get('slack_webhook', '')
+        self.email_settings = self.recipients_data.get('email_settings', {})
+    
+    def _load_recipients(self) -> Dict[str, Any]:
+        """Carga los destinatarios desde el archivo JSON."""
+        if not os.path.exists(self.recipients_file):
+            print(f"⚠️  Archivo {self.recipients_file} no encontrado. Usando configuración por defecto.")
+            return {
+                'people': [],
+                'channels': {},
+                'email_settings': {}
+            }
+        
+        try:
+            with open(self.recipients_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"⚠️  Error cargando {self.recipients_file}: {e}")
+            return {
+                'people': [],
+                'channels': {},
+                'email_settings': {}
+            }
+    
+    def _get_enabled_emails(self) -> List[str]:
+        """Obtiene la lista de emails habilitados."""
+        people = self.recipients_data.get('people', [])
+        return [person['email'] for person in people if person.get('enabled', True)]
+    
+    def get_recipients_info(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene información de todos los destinatarios.
+        
+        Returns:
+            Lista de diccionarios con información de cada persona
+        """
+        return self.recipients_data.get('people', [])
     
     def send_alert(self, message: str, alert_data: Dict[str, Any]):
         """
@@ -59,7 +98,9 @@ class AlertSystem:
             smtp_port = 25
             
             msg = MIMEMultipart()
-            msg['From'] = "anomaly-detector@accounttech.com"
+            from_email = self.email_settings.get('from_email', 'anomaly-detector@accounttech.com')
+            from_name = self.email_settings.get('from_name', 'Sistema de Detección de Anomalías')
+            msg['From'] = f"{from_name} <{from_email}>"
             msg['To'] = ", ".join(self.emails)
             msg['Subject'] = f"🚨 Alerta de Anomalía - Cuenta {alert_data['account_number']}"
             

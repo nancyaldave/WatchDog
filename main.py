@@ -32,7 +32,8 @@ class AnomalyDetector:
         self._setup_isolation_forest()
         
         # Inicializar sistemas de alerta
-        self.alert_system = AlertSystem(self.config['alert_recipients'])
+        recipients_file = self.config.get('recipients_file', 'recipients.json')
+        self.alert_system = AlertSystem(recipients_file)
         self.llm_generator = LLMAlertGenerator(self.config.get('llm', {}))
     
     def _setup_database_connection(self):

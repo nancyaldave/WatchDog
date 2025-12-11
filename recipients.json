@@ -1,0 +1,31 @@
+{
+  "people": [
+    {
+      "name": "Administrador del Sistema",
+      "email": "admin@example.com",
+      "role": "Administrator",
+      "enabled": true
+    },
+    {
+      "name": "Gerente de Finanzas",
+      "email": "finance@example.com",
+      "role": "Finance Manager",
+      "enabled": true
+    },
+    {
+      "name": "Contador Principal",
+      "email": "accountant@example.com",
+      "role": "Senior Accountant",
+      "enabled": true
+    }
+  ],
+  "channels": {
+    "teams_webhook": "",
+    "slack_webhook": ""
+  },
+  "email_settings": {
+    "from_email": "anomaly-detector@accounttech.com",
+    "from_name": "Sistema de Detección de Anomalías"
+  }
+}
+
