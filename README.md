@@ -5,7 +5,6 @@ Sistema que detecta anomalías en montos de cuentas contables usando **Isolation
 ## 🎯 Características
 
 - ✅ Detección de anomalías usando **Isolation Forest** (machine learning)
-- ✅ Regla de negocio: alerta si el monto supera **3x el promedio anual**
 - ✅ Generación de mensajes inteligentes usando **LLM local** (Ollama)
 - ✅ Envío de alertas por **Email**, **Microsoft Teams** y **Slack**
 - ✅ Reportes CSV con anomalías detectadas
@@ -26,7 +25,11 @@ Sistema que detecta anomalías en montos de cuentas contables usando **Isolation
 pip install -r requirements.txt
 ```
 
-3. **Configurar la conexión a la base de datos en `config.json`**
+3. **Configurar la conexión a la base de datos:**
+   ```bash
+   cp config.json.example config.json
+   ```
+   Luego edita `config.json` con tus credenciales
 
 4. **Configurar destinatarios de alertas en `config.json`**
 
@@ -34,6 +37,7 @@ pip install -r requirements.txt
 
 Edita el archivo `config.json`:
 
+**Opción 1: Autenticación Windows (Trusted Connection)**
 ```json
 {
   "database": {
@@ -41,6 +45,22 @@ Edita el archivo `config.json`:
     "database": "AT2017_DEPLOY",
     "driver": "ODBC Driver 17 for SQL Server",
     "trusted_connection": true
+  },
+  ...
+}
+```
+
+**Opción 2: Autenticación con Usuario y Contraseña (Docker o SQL Server estándar)**
+```json
+{
+  "database": {
+    "server": "localhost",
+    "port": 1433,
+    "database": "AT2017_DEPLOY",
+    "driver": "ODBC Driver 17 for SQL Server",
+    "trusted_connection": false,
+    "username": "tu_usuario",
+    "password": "tu_contraseña"
   },
   "alert_recipients": {
     "emails": [
@@ -55,9 +75,6 @@ Edita el archivo `config.json`:
     "random_state": 42,
     "n_estimators": 100
   },
-  "alert_threshold": {
-    "ratio_multiplier": 3.0
-  },
   "llm": {
     "model": "llama3",
     "base_url": "http://localhost:11434",
@@ -69,10 +86,44 @@ Edita el archivo `config.json`:
 ### Parámetros importantes:
 
 - **database**: Configuración de conexión SQL Server
+  - **server**: Dirección del servidor (ej: `localhost`, `127.0.0.1`, o IP del servidor)
+  - **port**: Puerto de SQL Server (por defecto `1433`, opcional si es el puerto estándar)
+  - **database**: Nombre de la base de datos
+  - **driver**: Driver ODBC (típicamente `"ODBC Driver 17 for SQL Server"`)
+  - **trusted_connection**: `true` para autenticación Windows, `false` para usuario/contraseña
+  - **username** y **password**: Solo necesarios si `trusted_connection` es `false`
 - **alert_recipients**: Lista de emails y webhooks para alertas
 - **isolation_forest.contamination**: Porcentaje esperado de anomalías (0.02 = 2%)
-- **alert_threshold.ratio_multiplier**: Multiplicador para regla de negocio (3.0 = 3x)
 - **llm**: Configuración del LLM local (Ollama)
+
+### 🐳 Configuración para SQL Server en Docker
+
+Si tienes SQL Server corriendo en Docker, configura así:
+
+```json
+{
+  "database": {
+    "server": "localhost",
+    "port": 1433,
+    "database": "AT2017_DEPLOY",
+    "driver": "ODBC Driver 17 for SQL Server",
+    "trusted_connection": false,
+    "username": "SA",
+    "password": "TuContraseñaSegura123!"
+  }
+}
+```
+
+**Nota**: 
+- Si mapeaste el puerto a otro (ej: `-p 1434:1433`), usa ese puerto en `config.json`
+- El usuario por defecto en Docker suele ser `SA` (System Administrator)
+- Asegúrate de que el contenedor esté corriendo: `docker ps`
+
+### ⚠️ Seguridad
+
+**IMPORTANTE**: Si usas usuario y contraseña en `config.json`, asegúrate de:
+1. Agregar `config.json` al `.gitignore` para no subir credenciales al repositorio
+2. Mantener el archivo con permisos restringidos (solo lectura para el propietario)
 
 ## 🗄️ Vista SQL Requerida
 
@@ -128,9 +179,8 @@ schtasks /create /tn "Anomaly Detection" /tr "python C:\ruta\al\proyecto\main.py
    - Calcula ratio vs promedio
    - Genera estadísticas adicionales (z-score, desviaciones)
 3. **Detección de anomalías**:
-   - Aplica **Isolation Forest** para detectar outliers
-   - Aplica regla de negocio: **monto ≥ 3x promedio anual**
-   - Combina ambas condiciones
+   - Aplica **Isolation Forest** (machine learning) para detectar outliers
+   - El modelo identifica patrones anómalos basándose en múltiples features
 4. **Generación de alertas**:
    - Usa **LLM local** para generar mensajes profesionales
    - Si LLM no está disponible, usa mensaje de respaldo
@@ -205,10 +255,8 @@ Si usas Gmail, necesitarás una contraseña de aplicación. Para servidor local,
 - **contamination**: Porcentaje esperado de anomalías
   - 0.01 = 1% de los datos son anomalías
   - 0.05 = 5% de los datos son anomalías
-  
-- **ratio_multiplier**: Umbral para regla de negocio
-  - 3.0 = alerta si monto ≥ 3x promedio
-  - 2.5 = alerta si monto ≥ 2.5x promedio
+  - Valores más altos detectarán más anomalías
+  - Valores más bajos serán más estrictos en la detección
 
 ## 📝 Licencia
 

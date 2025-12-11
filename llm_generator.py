@@ -44,7 +44,7 @@ class LLMAlertGenerator:
     
     def _create_prompt(self, alert_data: Dict[str, Any]) -> str:
         """Crea el prompt para el LLM."""
-        return f"""Eres un asistente financiero experto. Genera un mensaje profesional de alerta en español para notificar sobre una anomalía detectada en una cuenta contable.
+        return f"""Eres un asistente financiero experto. Genera un mensaje profesional de alerta en español para notificar sobre una anomalía detectada en una cuenta contable mediante machine learning (Isolation Forest).
 
 Datos de la anomalía:
 - Número de cuenta: {alert_data['account_number']}
@@ -54,10 +54,11 @@ Datos de la anomalía:
 - Promedio anual: ${alert_data['yearly_average']:,.2f}
 - Ratio vs promedio: {alert_data['ratio']:.2f}x
 - Método de detección: {alert_data['detection_method']}
+- Score de anomalía: {alert_data['isolation_score']:.4f}
 
 Genera un mensaje conciso (máximo 150 palabras) que:
-1. Explique claramente la anomalía detectada
-2. Proporcione contexto sobre por qué es significativa
+1. Explique claramente la anomalía detectada por el modelo de machine learning
+2. Proporcione contexto sobre por qué es significativa según el algoritmo
 3. Sugiera acciones recomendadas
 4. Sea profesional pero urgente
 
@@ -96,14 +97,15 @@ Mensaje:"""
         """Genera mensaje de respaldo sin LLM."""
         return (
             f"🚨 ALERTA DE ANOMALÍA DETECTADA\n\n"
-            f"Se ha detectado una anomalía significativa en la cuenta contable:\n\n"
+            f"Se ha detectado una anomalía significativa en la cuenta contable mediante Isolation Forest:\n\n"
             f"• Cuenta: {alert_data['account_number']} - {alert_data['account_name']}\n"
             f"• Fecha: {alert_data['date']}\n"
             f"• Monto detectado: ${alert_data['amount']:,.2f}\n"
             f"• Promedio anual: ${alert_data['yearly_average']:,.2f}\n"
             f"• Ratio: {alert_data['ratio']:.2f}x el promedio anual\n"
-            f"• Método de detección: {alert_data['detection_method']}\n\n"
-            f"Este monto supera significativamente el promedio histórico anual. "
+            f"• Método de detección: {alert_data['detection_method']}\n"
+            f"• Score de anomalía: {alert_data['isolation_score']:.4f}\n\n"
+            f"El modelo de machine learning (Isolation Forest) ha identificado este registro como una anomalía. "
             f"Se recomienda una revisión inmediata para verificar la validez de la transacción "
             f"y determinar si requiere acción correctiva.\n\n"
             f"Por favor, investigue esta anomalía lo antes posible."

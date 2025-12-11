@@ -3,10 +3,10 @@
     "server": "localhost",
     "port": 1433,
     "database": "AT2017_DEPLOY",
-    "driver": "FreeTDS",
+    "driver": "ODBC Driver 17 for SQL Server",
     "trusted_connection": false,
-    "username": "sa",
-    "password": "MiPassw0rd!1521"
+    "username": "tu_usuario_aqui",
+    "password": "tu_contraseña_aqui"
   },
   "alert_recipients": {
     "emails": [
@@ -27,5 +27,4 @@
     "enabled": true
   }
 }
-
 

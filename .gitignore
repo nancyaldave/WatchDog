@@ -42,6 +42,6 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Configuración sensible (opcional, comentar si quieres versionar)
-# config.json
+# Configuración sensible (contiene credenciales)
+config.json
 

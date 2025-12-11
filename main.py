@@ -39,19 +39,42 @@ class AnomalyDetector:
         """Configura la conexión a SQL Server."""
         db_config = self.config['database']
         
+        # Construir servidor con puerto si está especificado
+        server = db_config['server']
+        port = db_config.get('port')
+        if port:
+            server = f"{server},{port}"
+        
         if db_config.get('trusted_connection'):
+            # Autenticación Windows (Trusted Connection)
             connection_string = (
-                f"mssql+pyodbc://@{db_config['server']}/{db_config['database']}"
+                f"mssql+pyodbc://@{server}/{db_config['database']}"
                 f"?driver={db_config['driver'].replace(' ', '+')}"
                 f"&trusted_connection=yes"
             )
         else:
-            # Si necesitas autenticación por usuario/password
-            # connection_string = f"mssql+pyodbc://{user}:{password}@{server}/{database}?driver={driver}"
-            raise ValueError("Configura autenticación en config.json")
+            # Autenticación con usuario y contraseña
+            username = db_config.get('username', '')
+            password = db_config.get('password', '')
+            
+            if not username or not password:
+                raise ValueError(
+                    "Para autenticación SQL Server, configura 'username' y 'password' "
+                    "en config.json o usa 'trusted_connection': true para autenticación Windows"
+                )
+            
+            # Escapar caracteres especiales en la contraseña para URL
+            from urllib.parse import quote_plus
+            password_encoded = quote_plus(password)
+            username_encoded = quote_plus(username)
+            
+            connection_string = (
+                f"mssql+pyodbc://{username_encoded}:{password_encoded}@{server}/{db_config['database']}"
+                f"?driver={db_config['driver'].replace(' ', '+')}"
+            )
         
         self.engine = create_engine(connection_string)
-        print("✓ Conexión a base de datos configurada")
+        print(f"✓ Conexión a base de datos configurada: {server}/{db_config['database']}")
     
     def _setup_isolation_forest(self):
         """Configura el modelo Isolation Forest."""
@@ -113,7 +136,7 @@ class AnomalyDetector:
         return df
     
     def detect_anomalies(self, df):
-        """Detecta anomalías usando Isolation Forest y regla de negocio."""
+        """Detecta anomalías usando Isolation Forest."""
         print("\n🔍 Detectando anomalías...")
         
         # Preparar features para Isolation Forest
@@ -135,21 +158,13 @@ class AnomalyDetector:
         df_clean['if_prediction'] = self.isolation_forest.fit_predict(features_scaled)
         df_clean['if_score'] = self.isolation_forest.score_samples(features_scaled)
         
-        # Regla de negocio: 3x el promedio anual
-        threshold = self.config['alert_threshold']['ratio_multiplier']
-        df_clean['business_rule_alert'] = df_clean['ratio_vs_avg'] >= threshold
-        
-        # Combinar ambas condiciones
-        df_clean['is_anomaly'] = (
-            (df_clean['if_prediction'] == -1) |  # Isolation Forest detecta anomalía
-            (df_clean['business_rule_alert'])    # Regla de negocio: >= 3x promedio
-        )
+        # Detectar anomalías solo con Isolation Forest
+        df_clean['is_anomaly'] = (df_clean['if_prediction'] == -1)
         
         anomalies = df_clean[df_clean['is_anomaly']].copy()
         
         print(f"✓ Anomalías detectadas: {len(anomalies):,}")
-        print(f"  - Por Isolation Forest: {(df_clean['if_prediction'] == -1).sum()}")
-        print(f"  - Por regla de negocio (≥{threshold}x): {df_clean['business_rule_alert'].sum()}")
+        print(f"  - Método: Isolation Forest")
         
         return anomalies
     
@@ -172,7 +187,7 @@ class AnomalyDetector:
                 'amount': float(row['amount']),
                 'yearly_average': float(row['avg_year_amount']),
                 'ratio': float(row['ratio_vs_avg']),
-                'detection_method': 'Isolation Forest' if row['if_prediction'] == -1 else 'Business Rule',
+                'detection_method': 'Isolation Forest',
                 'isolation_score': float(row['if_score'])
             }
             
@@ -203,8 +218,9 @@ class AnomalyDetector:
             f"Monto: ${data['amount']:,.2f}\n"
             f"Promedio anual: ${data['yearly_average']:,.2f}\n"
             f"Ratio: {data['ratio']:.2f}x\n"
-            f"Método de detección: {data['detection_method']}\n\n"
-            f"Este monto supera {data['ratio']:.1f} veces el promedio anual. "
+            f"Método de detección: {data['detection_method']}\n"
+            f"Score de anomalía: {data['isolation_score']:.4f}\n\n"
+            f"Una anomalía ha sido detectada mediante Isolation Forest. "
             f"Se requiere revisión inmediata."
         )
     
@@ -267,7 +283,7 @@ class AnomalyDetector:
         report_cols = [
             'accountID', 'accountNumber', 'account', 'dtmDate',
             'amount', 'avg_year_amount', 'ratio_vs_avg',
-            'if_prediction', 'if_score', 'business_rule_alert'
+            'if_prediction', 'if_score'
         ]
         
         report = anomalies[report_cols].copy()
