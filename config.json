@@ -1,0 +1,31 @@
+{
+  "database": {
+    "server": "localhost",
+    "database": "AT2017_DEPLOY",
+    "driver": "ODBC Driver 17 for SQL Server",
+    "trusted_connection": true
+  },
+  "alert_recipients": {
+    "emails": [
+      "admin@example.com",
+      "finance@example.com"
+    ],
+    "teams_webhook": "",
+    "slack_webhook": ""
+  },
+  "isolation_forest": {
+    "contamination": 0.02,
+    "random_state": 42,
+    "n_estimators": 100
+  },
+  "alert_threshold": {
+    "ratio_multiplier": 3.0
+  },
+  "llm": {
+    "model": "llama3",
+    "base_url": "http://localhost:11434",
+    "enabled": true
+  }
+}
+
+
