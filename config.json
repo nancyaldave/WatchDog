@@ -3,22 +3,32 @@
     "server": "localhost",
     "database": "AT2017_DEPLOY",
     "driver": "ODBC Driver 17 for SQL Server",
-    "trusted_connection": true
+    "trusted_connection": true,
+    "username": "",
+    "password": ""
   },
-  "recipients_file": "recipients.json",
-  "isolation_forest": {
-    "contamination": 0.02,
-    "random_state": 42,
-    "n_estimators": 100
+  "anomaly_detection": {
+    "setting_key": "percentage Anomalias",
+    "anomaly_table": "AnomalyDetections",
+    "lookback_days": 365
   },
-  "alert_threshold": {
-    "ratio_multiplier": 3.0
+  "email": {
+    "enabled": true,
+    "smtp_server": "localhost",
+    "smtp_port": 25,
+    "use_tls": false,
+    "use_authentication": false,
+    "smtp_username": "",
+    "smtp_password": "",
+    "from_email": "anomaly-detector@darwin.com",
+    "from_name": "Darwin Anomaly Detection System",
+    "recipients": [
+      "admin@darwin.com",
+      "finance@darwin.com"
+    ]
   },
-  "llm": {
-    "model": "llama3",
-    "base_url": "http://localhost:11434",
-    "enabled": true
+  "company": {
+    "name": "Darwin"
   }
 }
-
 
