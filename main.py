@@ -54,7 +54,6 @@ class AnomalyDetector:
                 f"&trusted_connection=yes"
             )
         else:
-<<<<<<< HEAD
             # Autenticación con usuario y contraseña
             username = db_config.get('username', '')
             password = db_config.get('password', '')
@@ -77,14 +76,6 @@ class AnomalyDetector:
         
         self.engine = create_engine(connection_string)
         print(f"✓ Conexión a base de datos configurada: {server}/{db_config['database']}")
-=======
-            # If you need user/password authentication
-            # connection_string = f"mssql+pyodbc://{user}:{password}@{server}/{database}?driver={driver}"
-            raise ValueError("Configure authentication in config.json")
-        
-        self.engine = create_engine(connection_string)
-        print("✓ Database connection configured")
->>>>>>> b766129897ae58f35583cf00e50dc151d956090a
     
     def _setup_isolation_forest(self):
         """Configure the Isolation Forest model."""
@@ -146,13 +137,8 @@ class AnomalyDetector:
         return df
     
     def detect_anomalies(self, df):
-<<<<<<< HEAD
         """Detecta anomalías usando Isolation Forest."""
         print("\n🔍 Detectando anomalías...")
-=======
-        """Detect anomalies using Isolation Forest and business rule."""
-        print("\n🔍 Detecting anomalies...")
->>>>>>> b766129897ae58f35583cf00e50dc151d956090a
         
         # Prepare features for Isolation Forest
         feature_cols = ['amount', 'avg_year_amount', 'ratio_vs_avg', 
@@ -173,7 +159,6 @@ class AnomalyDetector:
         df_clean['if_prediction'] = self.isolation_forest.fit_predict(features_scaled)
         df_clean['if_score'] = self.isolation_forest.score_samples(features_scaled)
         
-<<<<<<< HEAD
         # Detectar anomalías solo con Isolation Forest
         df_clean['is_anomaly'] = (df_clean['if_prediction'] == -1)
         
@@ -181,23 +166,6 @@ class AnomalyDetector:
         
         print(f"✓ Anomalías detectadas: {len(anomalies):,}")
         print(f"  - Método: Isolation Forest")
-=======
-        # Business rule: 3x yearly average
-        threshold = self.config['alert_threshold']['ratio_multiplier']
-        df_clean['business_rule_alert'] = df_clean['ratio_vs_avg'] >= threshold
-        
-        # Combine both conditions
-        df_clean['is_anomaly'] = (
-            (df_clean['if_prediction'] == -1) |  # Isolation Forest detects anomaly
-            (df_clean['business_rule_alert'])    # Business rule: >= 3x average
-        )
-        
-        anomalies = df_clean[df_clean['is_anomaly']].copy()
-        
-        print(f"✓ Anomalies detected: {len(anomalies):,}")
-        print(f"  - By Isolation Forest: {(df_clean['if_prediction'] == -1).sum()}")
-        print(f"  - By business rule (≥{threshold}x): {df_clean['business_rule_alert'].sum()}")
->>>>>>> b766129897ae58f35583cf00e50dc151d956090a
         
         return anomalies
     
@@ -251,16 +219,10 @@ class AnomalyDetector:
             f"Amount: ${data['amount']:,.2f}\n"
             f"Yearly average: ${data['yearly_average']:,.2f}\n"
             f"Ratio: {data['ratio']:.2f}x\n"
-<<<<<<< HEAD
             f"Método de detección: {data['detection_method']}\n"
             f"Score de anomalía: {data['isolation_score']:.4f}\n\n"
             f"Una anomalía ha sido detectada mediante Isolation Forest. "
             f"Se requiere revisión inmediata."
-=======
-            f"Detection method: {data['detection_method']}\n\n"
-            f"This amount exceeds {data['ratio']:.1f} times the yearly average. "
-            f"Immediate review is required."
->>>>>>> b766129897ae58f35583cf00e50dc151d956090a
         )
     
     def send_alerts(self, alerts):
