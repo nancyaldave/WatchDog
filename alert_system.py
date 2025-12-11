@@ -1,5 +1,5 @@
 """
-Sistema de envío de alertas por email, Teams y Slack.
+Alert delivery system via email, Teams, and Slack.
 """
 
 import json
@@ -12,14 +12,14 @@ import os
 
 
 class AlertSystem:
-    """Maneja el envío de alertas a diferentes canales."""
+    """Handles alert delivery to different channels."""
     
     def __init__(self, recipients_file: str = 'recipients.json'):
         """
-        Inicializa el sistema de alertas.
+        Initialize the alert system.
         
         Args:
-            recipients_file: Ruta al archivo JSON con destinatarios
+            recipients_file: Path to JSON file with recipients
         """
         self.recipients_file = recipients_file
         self.recipients_data = self._load_recipients()
@@ -29,9 +29,9 @@ class AlertSystem:
         self.email_settings = self.recipients_data.get('email_settings', {})
     
     def _load_recipients(self) -> Dict[str, Any]:
-        """Carga los destinatarios desde el archivo JSON."""
+        """Load recipients from JSON file."""
         if not os.path.exists(self.recipients_file):
-            print(f"⚠️  Archivo {self.recipients_file} no encontrado. Usando configuración por defecto.")
+            print(f"⚠️  File {self.recipients_file} not found. Using default configuration.")
             return {
                 'people': [],
                 'channels': {},
@@ -42,7 +42,7 @@ class AlertSystem:
             with open(self.recipients_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
-            print(f"⚠️  Error cargando {self.recipients_file}: {e}")
+            print(f"⚠️  Error loading {self.recipients_file}: {e}")
             return {
                 'people': [],
                 'channels': {},
@@ -50,110 +50,110 @@ class AlertSystem:
             }
     
     def _get_enabled_emails(self) -> List[str]:
-        """Obtiene la lista de emails habilitados."""
+        """Get list of enabled email addresses."""
         people = self.recipients_data.get('people', [])
         return [person['email'] for person in people if person.get('enabled', True)]
     
     def get_recipients_info(self) -> List[Dict[str, Any]]:
         """
-        Obtiene información de todos los destinatarios.
+        Get information for all recipients.
         
         Returns:
-            Lista de diccionarios con información de cada persona
+            List of dictionaries with information for each person
         """
         return self.recipients_data.get('people', [])
     
     def send_alert(self, message: str, alert_data: Dict[str, Any]):
         """
-        Envía alerta a todos los canales configurados.
+        Send alert to all configured channels.
         
         Args:
-            message: Mensaje de alerta generado
-            alert_data: Datos de la anomalía detectada
+            message: Generated alert message
+            alert_data: Detected anomaly data
         """
-        # Enviar por email
+        # Send via email
         if self.emails:
             self._send_email(message, alert_data)
         
-        # Enviar a Teams
+        # Send to Teams
         if self.teams_webhook:
             self._send_teams(message, alert_data)
         
-        # Enviar a Slack
+        # Send to Slack
         if self.slack_webhook:
             self._send_slack(message, alert_data)
     
     def _send_email(self, message: str, alert_data: Dict[str, Any]):
-        """Envía alerta por email."""
+        """Send alert via email."""
         if not self.emails:
             return
         
         try:
-            # Configuración básica de SMTP (ajusta según tu servidor)
-            # Para Gmail: smtp.gmail.com:587
-            # Para Outlook: smtp-mail.outlook.com:587
-            # Para servidor local: localhost:25
+            # Basic SMTP configuration (adjust according to your server)
+            # For Gmail: smtp.gmail.com:587
+            # For Outlook: smtp-mail.outlook.com:587
+            # For local server: localhost:25
             
-            smtp_server = "localhost"  # Cambiar según tu configuración
+            smtp_server = "localhost"  # Change according to your configuration
             smtp_port = 25
             
             msg = MIMEMultipart()
             from_email = self.email_settings.get('from_email', 'anomaly-detector@accounttech.com')
-            from_name = self.email_settings.get('from_name', 'Sistema de Detección de Anomalías')
+            from_name = self.email_settings.get('from_name', 'Anomaly Detection System')
             msg['From'] = f"{from_name} <{from_email}>"
             msg['To'] = ", ".join(self.emails)
-            msg['Subject'] = f"🚨 Alerta de Anomalía - Cuenta {alert_data['account_number']}"
+            msg['Subject'] = f"🚨 Anomaly Alert - Account {alert_data['account_number']}"
             
             body = f"""
 {message}
 
 ---
-Sistema de Detección de Anomalías
-Generado automáticamente
+Anomaly Detection System
+Automatically generated
             """
             
             msg.attach(MIMEText(body, 'plain'))
             
-            # Enviar email (sin autenticación para servidor local)
-            # Si necesitas autenticación, descomenta y configura:
+            # Send email (without authentication for local server)
+            # If you need authentication, uncomment and configure:
             # server = smtplib.SMTP(smtp_server, smtp_port)
             # server.starttls()
             # server.login("user", "password")
             # server.send_message(msg)
             # server.quit()
             
-            print(f"  ✓ Email enviado a {len(self.emails)} destinatario(s)")
+            print(f"  ✓ Email sent to {len(self.emails)} recipient(s)")
             
         except Exception as e:
-            print(f"  ⚠️  Error enviando email: {e}")
+            print(f"  ⚠️  Error sending email: {e}")
     
     def _send_teams(self, message: str, alert_data: Dict[str, Any]):
-        """Envía alerta a Microsoft Teams."""
+        """Send alert to Microsoft Teams."""
         if not self.teams_webhook:
             return
         
         try:
-            # Formato de mensaje para Teams
+            # Message format for Teams
             teams_message = {
                 "@type": "MessageCard",
                 "@context": "https://schema.org/extensions",
-                "summary": f"Alerta de Anomalía - Cuenta {alert_data['account_number']}",
+                "summary": f"Anomaly Alert - Account {alert_data['account_number']}",
                 "themeColor": "FF0000",
-                "title": "🚨 Alerta de Anomalía Detectada",
+                "title": "🚨 Anomaly Alert Detected",
                 "sections": [
                     {
-                        "activityTitle": f"Cuenta: {alert_data['account_number']} - {alert_data['account_name']}",
+                        "activityTitle": f"Account: {alert_data['account_number']} - {alert_data['account_name']}",
                         "facts": [
                             {
-                                "name": "Fecha:",
+                                "name": "Date:",
                                 "value": alert_data['date']
                             },
                             {
-                                "name": "Monto:",
+                                "name": "Amount:",
                                 "value": f"${alert_data['amount']:,.2f}"
                             },
                             {
-                                "name": "Promedio Anual:",
+                                "name": "Yearly Average:",
                                 "value": f"${alert_data['yearly_average']:,.2f}"
                             },
                             {
@@ -161,7 +161,7 @@ Generado automáticamente
                                 "value": f"{alert_data['ratio']:.2f}x"
                             },
                             {
-                                "name": "Método:",
+                                "name": "Method:",
                                 "value": alert_data['detection_method']
                             }
                         ],
@@ -178,27 +178,27 @@ Generado automáticamente
             )
             
             if response.status_code == 200:
-                print("  ✓ Alerta enviada a Teams")
+                print("  ✓ Alert sent to Teams")
             else:
-                print(f"  ⚠️  Error enviando a Teams: {response.status_code}")
+                print(f"  ⚠️  Error sending to Teams: {response.status_code}")
                 
         except Exception as e:
-            print(f"  ⚠️  Error enviando a Teams: {e}")
+            print(f"  ⚠️  Error sending to Teams: {e}")
     
     def _send_slack(self, message: str, alert_data: Dict[str, Any]):
-        """Envía alerta a Slack."""
+        """Send alert to Slack."""
         if not self.slack_webhook:
             return
         
         try:
             slack_message = {
-                "text": "🚨 Alerta de Anomalía Detectada",
+                "text": "🚨 Anomaly Alert Detected",
                 "blocks": [
                     {
                         "type": "header",
                         "text": {
                             "type": "plain_text",
-                            "text": "🚨 Alerta de Anomalía"
+                            "text": "🚨 Anomaly Alert"
                         }
                     },
                     {
@@ -206,15 +206,15 @@ Generado automáticamente
                         "fields": [
                             {
                                 "type": "mrkdwn",
-                                "text": f"*Cuenta:*\n{alert_data['account_number']} - {alert_data['account_name']}"
+                                "text": f"*Account:*\n{alert_data['account_number']} - {alert_data['account_name']}"
                             },
                             {
                                 "type": "mrkdwn",
-                                "text": f"*Fecha:*\n{alert_data['date']}"
+                                "text": f"*Date:*\n{alert_data['date']}"
                             },
                             {
                                 "type": "mrkdwn",
-                                "text": f"*Monto:*\n${alert_data['amount']:,.2f}"
+                                "text": f"*Amount:*\n${alert_data['amount']:,.2f}"
                             },
                             {
                                 "type": "mrkdwn",
@@ -240,10 +240,10 @@ Generado automáticamente
             )
             
             if response.status_code == 200:
-                print("  ✓ Alerta enviada a Slack")
+                print("  ✓ Alert sent to Slack")
             else:
-                print(f"  ⚠️  Error enviando a Slack: {response.status_code}")
+                print(f"  ⚠️  Error sending to Slack: {response.status_code}")
                 
         except Exception as e:
-            print(f"  ⚠️  Error enviando a Slack: {e}")
+            print(f"  ⚠️  Error sending to Slack: {e}")
 
