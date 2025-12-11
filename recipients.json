@@ -25,7 +25,13 @@
   },
   "email_settings": {
     "from_email": "anomaly-detector@accounttech.com",
-    "from_name": "Sistema de Detección de Anomalías"
+    "from_name": "Sistema de Detección de Anomalías",
+    "smtp_server": "localhost",
+    "smtp_port": 25,
+    "use_tls": false,
+    "use_authentication": false,
+    "smtp_username": "",
+    "smtp_password": ""
   }
 }
 

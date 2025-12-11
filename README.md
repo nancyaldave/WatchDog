@@ -93,7 +93,13 @@ Edita el archivo `recipients.json` para agregar o modificar destinatarios:
   },
   "email_settings": {
     "from_email": "anomaly-detector@accounttech.com",
-    "from_name": "Sistema de Detección de Anomalías"
+    "from_name": "Sistema de Detección de Anomalías",
+    "smtp_server": "localhost",
+    "smtp_port": 25,
+    "use_tls": false,
+    "use_authentication": false,
+    "smtp_username": "",
+    "smtp_password": ""
   }
 }
 ```
@@ -111,6 +117,32 @@ Edita el archivo `recipients.json` para agregar o modificar destinatarios:
 **Configuración de email:**
 - `from_email`: Email del remitente
 - `from_name`: Nombre del remitente
+- `smtp_server`: Servidor SMTP (ej: `smtp.gmail.com`, `smtp-mail.outlook.com`, `localhost`)
+- `smtp_port`: Puerto SMTP (25 para servidor local, 587 para TLS, 465 para SSL)
+- `use_tls`: `true` para habilitar TLS/STARTTLS (requerido para Gmail, Outlook)
+- `use_authentication`: `true` para usar autenticación SMTP
+- `smtp_username`: Usuario SMTP (si `use_authentication` es `true`)
+- `smtp_password`: Contraseña SMTP (si `use_authentication` es `true`)
+
+**Ejemplos de configuración SMTP:**
+
+Para Gmail:
+```json
+"smtp_server": "smtp.gmail.com",
+"smtp_port": 587,
+"use_tls": true,
+"use_authentication": true,
+"smtp_username": "tu-email@gmail.com",
+"smtp_password": "tu-contraseña-de-aplicacion"
+```
+
+Para servidor local (sin autenticación):
+```json
+"smtp_server": "localhost",
+"smtp_port": 25,
+"use_tls": false,
+"use_authentication": false
+```
 
 ### Parámetros importantes:
 
@@ -222,14 +254,15 @@ Si no quieres usar LLM, configura `"enabled": false` en `config.json` bajo `llm`
 
 ## 📧 Configuración de Email
 
-Para enviar emails, configura tu servidor SMTP en `alert_system.py`:
+Para enviar emails, configura tu servidor SMTP en `recipients.json` bajo la sección `email_settings`. 
 
-```python
-smtp_server = "smtp.gmail.com"  # o tu servidor SMTP
-smtp_port = 587
-```
+El sistema ahora envía emails realmente (el código SMTP está implementado y funcional). Configura los siguientes parámetros según tu servidor:
 
-Si usas Gmail, necesitarás una contraseña de aplicación. Para servidor local, usa `localhost:25`.
+- **Servidor local**: Usa `localhost` con puerto `25`, sin TLS ni autenticación
+- **Gmail**: Requiere TLS y autenticación con contraseña de aplicación
+- **Outlook/Office365**: Requiere TLS y autenticación
+
+Ver la sección de configuración de `recipients.json` arriba para ejemplos completos.
 
 ## 🐛 Solución de Problemas
 

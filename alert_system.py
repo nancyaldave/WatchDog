@@ -89,14 +89,15 @@ class AlertSystem:
             return
         
         try:
-            # Basic SMTP configuration (adjust according to your server)
-            # For Gmail: smtp.gmail.com:587
-            # For Outlook: smtp-mail.outlook.com:587
-            # For local server: localhost:25
+            # Get SMTP configuration from email_settings
+            smtp_server = self.email_settings.get('smtp_server', 'localhost')
+            smtp_port = self.email_settings.get('smtp_port', 25)
+            use_tls = self.email_settings.get('use_tls', False)
+            use_authentication = self.email_settings.get('use_authentication', False)
+            smtp_username = self.email_settings.get('smtp_username', '')
+            smtp_password = self.email_settings.get('smtp_password', '')
             
-            smtp_server = "localhost"  # Change according to your configuration
-            smtp_port = 25
-            
+            # Create email message
             msg = MIMEMultipart()
             from_email = self.email_settings.get('from_email', 'anomaly-detector@accounttech.com')
             from_name = self.email_settings.get('from_name', 'Anomaly Detection System')
@@ -114,16 +115,29 @@ Automatically generated
             
             msg.attach(MIMEText(body, 'plain'))
             
-            # Send email (without authentication for local server)
-            # If you need authentication, uncomment and configure:
-            # server = smtplib.SMTP(smtp_server, smtp_port)
-            # server.starttls()
-            # server.login("user", "password")
-            # server.send_message(msg)
-            # server.quit()
+            # Connect to SMTP server and send email
+            server = smtplib.SMTP(smtp_server, smtp_port)
             
-            print(f"  ✓ Email sent to {len(self.emails)} recipient(s)")
+            try:
+                # Enable TLS if configured
+                if use_tls:
+                    server.starttls()
+                
+                # Authenticate if configured
+                if use_authentication:
+                    if not smtp_username or not smtp_password:
+                        raise ValueError("SMTP authentication enabled but username/password not configured")
+                    server.login(smtp_username, smtp_password)
+                
+                # Send the email
+                server.send_message(msg)
+                print(f"  ✓ Email sent to {len(self.emails)} recipient(s)")
+                
+            finally:
+                server.quit()
             
+        except smtplib.SMTPException as e:
+            print(f"  ⚠️  SMTP error sending email: {e}")
         except Exception as e:
             print(f"  ⚠️  Error sending email: {e}")
     
